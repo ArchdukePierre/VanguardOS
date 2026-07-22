@@ -24,17 +24,6 @@ Vanguard OS is an advanced player tracking and monitoring operating system built
     *   **1x Command Computer** (Standard computers will *not* work as they lack the `commands` API).
     *   **Ideally 6 wide by 4 tall Advanced Monitors** (For color GUI and multi-screen support).
 
----
-
-##  Installation & Setup
-
-1. Place down a Command Computer.
-2. Attach the Advanced Monitors to the computer (adjacent sides or via modded networking).
-3. Download/Paste the Vanguard OS Lua script into a file on the computer (e.g., `startup.lua` to run on boot).
-4. Run the script.
-
----
-
 ##  User Guide
 
 ### 1. First Run & Authentication
