@@ -22,7 +22,7 @@ Vanguard OS is an advanced player tracking and monitoring operating system built
 2.  **Mod:** CC:Tweaked (or an equivalent ComputerCraft fork).
 3.  **Hardware:**
     *   **1x Command Computer** (Standard computers will *not* work as they lack the `commands` API).
-    *   **1x or 2x Advanced Monitors** (For color GUI and multi-screen support).
+    *   **Ideally 6 wide by 4 tall Advanced Monitors** (For color GUI and multi-screen support).
 
 ---
 
