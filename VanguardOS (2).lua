@@ -4,7 +4,7 @@
 -- Features:
 --   * Touchscreen lock screen PIN (stored as salted hash on disk)
 --   * Optional keyboard-only admin override unlock (no player identity exists in monitor_touch events)
---   * Multi-monitor split: roster left monitor, grid right monitor (if 2 monitors exist)
+--   * Multi-monitor split: roster left monitor, grid right monitor (if 2+ monitors exist)
 --   * Vehicle-seat fallback: RootVehicle.Entity.Pos when player Pos freezes (passenger/gunner cases)
 --   * Stale indicators: per-player age badges + offline handling
 --   * task_complete shape-agnostic unpacking
@@ -92,7 +92,6 @@ local CFG = {
   },
 
   plausibility = {
-    -- You requested: Y up to 1000.
     -- Swap Y/Z only when Y is extreme and Z is plausible.
     swapAbs = 1000
   },
