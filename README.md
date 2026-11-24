@@ -1,18 +1,21 @@
-# Vanguard OS V11.3
+# Vanguard OS V12.0
 
 
-Vanguard OS is an advanced player tracking and monitoring operating system built for Minecraft Command Computers via the **CC:Tweaked** mod. It provides real-time, on-screen tracking of players' health, coordinates, and vehicle usage, wrapped in an interactive ASCII graphical user interface.
+Vanguard OS is an advanced player tracking and monitoring operating system built for Minecraft Command Computers via the **CC:Tweaked** mod. It provides real-time, on-screen tracking of players' health, coordinates, dimension and vehicle usage, wrapped in an interactive touchscreen interface.
+
+The current version is `VanguardOS_V12.lua`. The older V11.3 file (`VanguardOS (2).lua`) is kept in the repository for reference.
 
 ##  Key Features
 
-*   **Touchscreen Lock Screen:** Secure access to the system using a touchscreen keypad. The PIN is stored on-disk as a salted FNV-1a hash to prevent casual snooping.
-*   **Dual-Monitor Support:** Automatically detects up to two connected monitors, splitting the UI into a **Roster View** (Monitor A) and a **Watch Grid** (Monitor B). Single monitor setups are also seamlessly supported.
-*   **Advanced Player Polling:** Asynchronously queries player Health and XYZ Position using command queues (`commands.execAsync`).
-*   **Vehicle-Seat Fallback:** Automatically detects when a player is "frozen" (e.g., sitting in a vehicle, minecart, or passenger seat) and queries `RootVehicle.Entity.Pos` to display accurate coordinates.
-*   **Target Prioritization:** Features a "Focus" mode to prioritize polling rates for a specific tracked target.
-*   **Stale Indicators:** Real-time data age badges (`FRESH`, `STALE`, `HARD STALE`) and offline handling to immediately show when data is out of date.
-*   **Admin Override:** Keyboard-only "Admin Override" accessible via the physical computer terminal (prevents lock-outs).
-*   **Crash Safety:** Built-in error trapping that presents a safe reboot screen rather than dropping to the shell.
+*   **Touchscreen Lock Screen:** Secure access with a PIN you choose on first run. The PIN is stored on disk as a salted, iterated SHA-256 hash. After 3 wrong attempts the keypad locks out for 30 seconds, and the delay doubles with every further 3 failures (up to 15 minutes). The system also locks itself after 3 minutes without input.
+*   **Flexible Displays:** With two monitors, Monitor A shows the **Roster** and Monitor B shows the **Watch Grid**. With one monitor, a **ROSTER** and **GRID** tab switch between the two views. With no monitor, everything runs on the computer terminal. Layouts adapt to the monitor size, and monitors can be attached or removed while the system runs.
+*   **Efficient Player Polling:** Queries Health, XYZ Position and Dimension asynchronously with `commands.execAsync`. The focused player is polled four times a second, other watched players once a second, and players that stop answering back off automatically so the server is not flooded.
+*   **Vehicle-Seat Fallback:** Detects when a player's position is frozen (passenger or gunner seats in modded vehicles) and reads `RootVehicle.Entity.Pos` instead. Players who are not in a vehicle are probed less and less often.
+*   **Player Cards:** Each card shows a health bar, a LOW HP flag, the dimension, the position source, the data age, and a status chip (`FRESH`, `STALE`, `HARD`, `WAIT` or `OFF`).
+*   **Event Log:** Joins, leaves and low health alerts appear in an EVENTS panel on the roster screen (needs a tall monitor).
+*   **Focus Mode:** Pin one player to the top of the grid with a yellow card edge and a faster polling rate.
+*   **Admin Keyboard Controls:** Unlock, change the PIN or lock from the physical computer terminal. These work even during a keypad lockout.
+*   **Crash Safety:** Errors are logged to `.vanguard_crash.log` and the system restarts itself. If it crashes more than 5 times within 2 minutes it shows a crash screen and waits for you to press `R` to reboot.
 
 ---
 
@@ -22,29 +25,36 @@ Vanguard OS is an advanced player tracking and monitoring operating system built
 2.  **Mod:** CC:Tweaked (or an equivalent ComputerCraft fork).
 3.  **Hardware:**
     *   **1x Command Computer** (Standard computers will *not* work as they lack the `commands` API).
-    *   **Ideally 6 wide by 4 tall Advanced Monitors** (For color GUI and multi-screen support).
+    *   **Ideally 6 wide by 4 tall Advanced Monitors** (For color GUI, touch input and multi-screen support). Basic monitors are drawn in grayscale but cannot be touched.
 
 ##  User Guide
 
-### 1. First Run & Authentication
-Upon first boot, the system will generate a secure PIN file (`.vanguard_pin_v113`) and lock the screen.
-*   **Default PIN:** `040400`
-*   Enter the PIN using the touchscreen monitors to unlock the system.
+### 1. First Run & Setting a PIN
+There is no default PIN. On first boot the computer terminal asks you to set one.
+*   Right-click the physical Command Computer block to open the terminal.
+*   Type a PIN of 4 to 8 digits and press Enter, then type it again to confirm.
+*   The monitors then show the lock screen. Enter the PIN on the touchscreen keypad and tap `ENTER`.
 
-### 2. Admin Keyboard Override
-If you forget the PIN or want to bypass the monitor touchscreen:
-*   Right-click the physical Command Computer block to open the native terminal.
-*   Press the `U` key.
-*   Enter the PIN on your keyboard. *(This is an anti-spoofing feature, as monitor touches don't carry player identity data, but terminal access implies physical block access).*
+### 2. Admin Keyboard Controls
+These are used on the physical computer terminal (monitor touches carry no player identity, but terminal access implies physical access to the block).
+*   `U` while locked: enter the PIN on your keyboard to unlock. This is also the way in during a keypad lockout.
+*   `P` while unlocked: change the PIN (current PIN, then new PIN twice).
+*   `L` while unlocked: lock the system.
+*   `Ctrl+T`: quit to the shell. Monitors show a stopped notice.
 
 ### 3. Using the UI
-*   **Roster List (Monitor A):** Displays all players currently online. Tap a player's name to add them to your Watchlist. 
-*   **Watch Grid (Monitor B):** Displays detailed cards for all tracked players.
-    *   **HP:** Shows the player's current health.
-    *   **POS:** Real-time X, Y, Z coordinates.
-    *   **FOCUS:** Tap the "Focus" button on a card to prioritize that player, increasing their polling rate.
-    *   **UNWATCH:** Removes the player from the active tracking grid.
-*   **Locking:** Tap the `LOCK` button in the top right of either screen to secure the console when walking away.
+*   **Roster (Monitor A):** Lists online players with their HP and dimension. Tap a name to add or remove it from your Watchlist. Watched players who are offline stay listed so they can be unwatched.
+*   **Watch Grid (Monitor B):** Displays detailed cards for all watched players.
+    *   **HP:** Current health with a color bar.
+    *   **POS:** Real-time X, Y, Z block coordinates.
+    *   **DIM:** The dimension the player is in.
+    *   **SRC:** Whether the coordinates come from the player or from a vehicle.
+    *   **AGE:** How long ago the data was last updated.
+    *   **FOCUS:** Tap to prioritize that player. Tap again to clear the focus.
+    *   **UNWATCH:** Removes the player from the grid.
+*   **Single monitor:** Use the `ROSTER` and `GRID` buttons in the header to switch views.
+*   **Paging:** Use `<` and `>` at the bottom of the screen when there are more players than fit.
+*   **Locking:** Tap the `LOCK` button in the top right of the screen when walking away.
 
 ---
 
@@ -52,11 +62,15 @@ If you forget the PIN or want to bypass the monitor touchscreen:
 
 The script contains a top-level `CFG` table that advanced users can modify:
 
-*   **System Files:** State and PIN are saved locally in `.vanguard_data_v113` and `.vanguard_pin_v113`. 
-*   **Polling Limits:** `pollPerTick` and `maxTasks` (default: 180) prevent the script from saturating the server's command queue and causing tick lag.
+*   **System Files:** State and PIN are saved in `.vanguard_data_v12` and `.vanguard_pin_v12`. Files are written to a temporary copy first, so a crash cannot leave a half-written file.
+*   **Polling Limits:** `pollPerTick` (default 4 players per tick) and `maxTasks` (default 120) prevent the script from saturating the server's command queue and causing tick lag. `CFG.poll` sets the refresh interval for focused and normal players.
 *   **Stale Thresholds:** Data is marked `STALE` after 5 seconds without an update, and `HARD` (Hard Stale) after 15 seconds.
-*   **Plausibility Checking:** Built-in heuristics swap Y and Z coordinates if the output parsers misalign due to extreme height maps vs distance limits (`CFG.plausibility.swapAbs = 1000`).
+*   **PIN Rules:** `CFG.pin` sets the PIN length, hashing rounds and lockout timing. `CFG.system.autoLockSec` sets the idle auto-lock (0 turns it off).
+*   **Display:** `CFG.system.textScale` (default 0.5) is applied to every attached monitor.
 
----
+### Upgrading from V11.3
+*   V12 uses new file names, so V11.3 files are not overwritten.
+*   The old PIN is not carried over. You set a new one on first run.
+*   Your watchlist and focus are imported automatically from `.vanguard_data_v113` the first time V12 runs.
 
-*Note: You can reset the PIN by either deleting the `.vanguard_pin_v113` file via the CraftOS shell or editing the default value in the script.*
+*Note: You can reset the PIN by deleting the `.vanguard_pin_v12` file via the CraftOS shell (press `Ctrl+T` to leave the program). The next start will ask for a new PIN.*
